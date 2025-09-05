@@ -1,0 +1,23 @@
+# Environment variables
+.env
+
+# Firebase credentials
+firebase/sih2025-f61be-firebase-adminsdk-fbsvc-7abb48115a.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Models directory
+models/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
