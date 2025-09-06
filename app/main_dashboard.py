@@ -6,13 +6,23 @@ import subprocess
 import pathlib
 from app.pages.student_registration import show_student_registration
 from app.pages.live_attendance import show_live_attendance
-from app.pages.suggestion_engine import show_suggestion_engine
-from app.pages.visual_daily_planner import show_visual_daily_planner
 from app.pages.admin_dashboard import show_admin_dashboard
+from app.pages.marks_feedback import show_marks_feedback_entry
+from app.pages.daily_feedback import show_daily_feedback_entry
+from app.pages.faculty_student_records import show_faculty_student_records
+from app.pages.faculty_checkin import show_faculty_checkin
 
-# Require login
+# Require login and restrict to faculty/admin only
 if 'user' not in st.session_state or 'role' not in st.session_state:
     st.switch_page('pages/auth.py')
+
+# Restrict access to faculty/admin only
+if st.session_state.get('role') != 'faculty':
+    st.error('🚫 Access Denied: This dashboard is only for faculty and admin members.')
+    st.info('Students should use the Student Dashboard.')
+    if st.button('Go to Student Dashboard', key='main_go_to_student_btn'):
+        st.switch_page('pages/student_dashboard.py')
+    st.stop()
 
 st.sidebar.write(f"Logged in as: {st.session_state['user']} ({st.session_state['role']})")
 if st.sidebar.button('Logout'):
@@ -25,7 +35,7 @@ st.markdown('''
 Welcome to the all-in-one platform for automated attendance, student productivity, and personalized planning!
 ''')
 
-class_name = st.text_input('Enter Class Name (e.g., 10A, 12B, etc.)', max_chars=10)
+class_name = st.text_input('Enter Class Name (e.g., 10A, 12B, etc.)', max_chars=10, key='main_class_name')
 db = get_firestore_client()
 
 if class_name:
@@ -34,7 +44,7 @@ if class_name:
     student_list = [(doc.to_dict().get('register_number', ''), doc.to_dict().get('name', '')) for doc in students]
     st.subheader(f'👥 Students in {class_name}')
     st.write([f"{regno} - {name}" for regno, name in student_list] if student_list else 'No students added yet.')
-    expected_count = st.number_input('How many students should be in this class?', min_value=1, step=1)
+    expected_count = st.number_input('How many students should be in this class?', min_value=1, step=1, key='main_expected_count')
     if len(student_list) < expected_count:
         st.warning(f'Only {len(student_list)} of {expected_count} students added.')
         with st.expander('➕ Add New Student'):
@@ -73,7 +83,7 @@ if class_name:
                         st.rerun()
     elif len(student_list) == expected_count:
         st.success('✅ All students have been added!')
-        if st.button('🚀 Start Model Training'):
+        if st.button('🚀 Start Model Training', key='main_start_training_btn'):
             with st.spinner('Training model, please wait...'):
                 result = subprocess.run(['python', 'backend/model_training.py'], capture_output=True, text=True)
                 if result.returncode == 0:
@@ -81,13 +91,14 @@ if class_name:
                 else:
                     st.error(f'Model training failed: {result.stderr}')
         st.markdown('---')
-    st.subheader('🔗 Quick Navigation')
+    st.subheader('🔗 Faculty Tools')
     tabs = st.tabs([
-        
         'Student Registration',
         'Live Attendance',
-        'Suggestion Engine',
-        'Daily Planner',
+        'Marks & Feedback',
+        'Daily Feedback',
+        'Student Records',
+        'Period Check-in',
         'Admin Dashboard'
     ])
     with tabs[0]:
@@ -95,41 +106,19 @@ if class_name:
     with tabs[1]:
         show_live_attendance()
     with tabs[2]:
-        show_suggestion_engine()
+        show_marks_feedback_entry()
     with tabs[3]:
-        show_visual_daily_planner()
+        show_daily_feedback_entry()
     with tabs[4]:
+        show_faculty_student_records()
+    with tabs[5]:
+        show_faculty_checkin()
+    with tabs[6]:
         show_admin_dashboard()
 else:
     st.info('Enter a class name to get started!')
 
-# Navigation sidebar
+# Navigation sidebar - Faculty only
 st.sidebar.markdown('---')
-if st.session_state['role'] == 'faculty':
-    st.sidebar.write('**Faculty Tools**')
-    if st.sidebar.button('Period Check-in'):
-        st.switch_page('pages/faculty_checkin.py')
-    if st.sidebar.button('Enter Marks/Feedback'):
-        st.switch_page('pages/marks_feedback.py')
-    if st.sidebar.button('Daily Feedback Entry'):
-        st.switch_page('pages/daily_feedback.py')
-    if st.sidebar.button('Student Records'):
-        st.switch_page('pages/faculty_student_records.py')
-    if st.sidebar.button('Admin Dashboard'):
-        st.switch_page('pages/admin_dashboard.py')
-if st.session_state['role'] == 'student':
-    st.sidebar.write('**Student Tools**')
-    if st.sidebar.button('Student Dashboard'):
-        st.switch_page('pages/student_dashboard.py')
-    if st.sidebar.button('Attendance Report'):
-        st.switch_page('pages/student_dashboard.py')
-    if st.sidebar.button('Marks & Feedback'):
-        st.switch_page('pages/student_dashboard.py')
-    if st.sidebar.button('Progress Dashboard'):
-        st.switch_page('pages/student_dashboard.py')
-if st.sidebar.button('Suggestion Engine'):
-    st.switch_page('pages/suggestion_engine.py')
-if st.sidebar.button('Visual Daily Planner'):
-    st.switch_page('pages/visual_daily_planner.py')
-if st.sidebar.button('Live Attendance'):
-    st.switch_page('pages/live_attendance.py')
+st.sidebar.write('**Quick Actions**')
+st.sidebar.info('All faculty tools are now available in the tabs above. No need to navigate to separate pages!')

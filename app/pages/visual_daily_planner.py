@@ -1,5 +1,4 @@
 import streamlit as st
-st.set_page_config(layout="wide")
 import pandas as pd
 from datetime import datetime, time, timedelta
 from firebase.firebase_admin_init import get_firestore_client
@@ -77,11 +76,24 @@ def boldify(text):
 
 def show_visual_daily_planner():
     st.title('📅 Visual Daily Planner')
+    
+    # Check if user is logged in and is a student
+    if 'user' not in st.session_state or 'role' not in st.session_state:
+        st.error('Please login to access this page.')
+        st.switch_page('pages/auth.py')
+        return
+    
+    if st.session_state.get('role') != 'student':
+        st.error('🚫 Access Denied: This feature is only for students.')
+        st.info('Faculty members should use the main dashboard.')
+        if st.button('Go to Main Dashboard'):
+            st.switch_page('main_dashboard.py')
+        st.stop()
+    
     db = get_firestore_client()
     class_name = st.text_input('Class (e.g., 10A, 12B, etc.)', max_chars=10, key='planner_class_name')
     register_number = st.text_input('Register Number (e.g., 22ISR026)', max_chars=20, key='planner_register_number')
     date = st.date_input('Date', value=datetime.today(), key='planner_date')
-    is_admin = st.checkbox('I am a teacher/admin', key='planner_is_admin')
     student_data = None
     if register_number:
         student_ref = db.collection('students').document(register_number)
@@ -97,37 +109,20 @@ def show_visual_daily_planner():
         # Build DataFrame for grid
         timetable_df = pd.DataFrame({day: [f"{cell['subject']} ({cell['faculty']})" if cell['subject'] else '' for cell in week_timetable[day]] for day in DAYS}, index=[p['label'] for p in PERIODS])
         timetable_df.index.name = 'Period/Day'
-        if is_admin:
-            st.subheader('🗓️ Edit Class Week-wise Timetable')
-            timetable_input = {}
-            for i, period in enumerate(PERIODS):
-                cols = st.columns([1] + [2]*len(DAYS))
-                cols[0].write(f"**{period['label']}**")
-                for j, day in enumerate(DAYS):
-                    key_subj = f'edit_{day}_{i}_subject'
-                    key_fac = f'edit_{day}_{i}_faculty'
-                    subj = cols[j+1].text_input('Subject', value=week_timetable[day][i].get('subject', ''), key=key_subj)
-                    fac = cols[j+1].text_input('Faculty', value=week_timetable[day][i].get('faculty', ''), key=key_fac)
-                    timetable_input[(day, i)] = {'subject': subj, 'faculty': fac}
-            if st.button('Save Week Timetable', key='planner_save_week_timetable'):
-                new_week_timetable = {d: [timetable_input[(d, i)] for i in range(len(PERIODS))] for d in DAYS}
-                schedule_ref.set({'week_timetable': new_week_timetable})
-                st.success('Class week-wise timetable saved!')
-                week_timetable = new_week_timetable
-        else:
-            st.subheader('📅 Class Week Timetable')
-            # For display, show subject (faculty) in each cell
-            header_cols = st.columns([1] + [1]*len(DAYS))
-            header_cols[0].write('**Period/Day**')
+        
+        st.subheader('📅 Class Week Timetable')
+        # For display, show subject (faculty) in each cell
+        header_cols = st.columns([1] + [1]*len(DAYS))
+        header_cols[0].write('**Period/Day**')
+        for j, day in enumerate(DAYS):
+            header_cols[j+1].write(f'**{day}**')
+        for i, period in enumerate(PERIODS):
+            row_cols = st.columns([1] + [1]*len(DAYS))
+            row_cols[0].write(f"**{period['label']}**")
             for j, day in enumerate(DAYS):
-                header_cols[j+1].write(f'**{day}**')
-            for i, period in enumerate(PERIODS):
-                row_cols = st.columns([1] + [1]*len(DAYS))
-                row_cols[0].write(f"**{period['label']}**")
-                for j, day in enumerate(DAYS):
-                    cell = week_timetable[day][i]
-                    val = f"{cell.get('subject', '')} ({cell.get('faculty', '')})" if cell.get('subject') else '-'
-                    row_cols[j+1].write(val)
+                cell = week_timetable[day][i]
+                val = f"{cell.get('subject', '')} ({cell.get('faculty', '')})" if cell.get('subject') else '-'
+                row_cols[j+1].write(val)
         # Show today's schedule, factoring in check-ins
         today_str = get_day_str(date)
         st.subheader(f"🗓️ Schedule for {today_str}")
@@ -138,10 +133,46 @@ def show_visual_daily_planner():
             # Check for faculty check-in
             checkin_ref = db.collection('checkins').document(f'{date}_{class_name}_{i}')
             checkin_doc = checkin_ref.get()
-            is_free = not checkin_doc.exists or not cell['subject']
-            today_schedule.append({'period': cell['subject'] if cell['subject'] else 'Free', 'faculty': cell['faculty'] if cell['faculty'] else '-', 'start': start, 'end': end, 'free': is_free})
+            
+            scheduled_subject = cell['subject'] if cell['subject'] else 'Free'
+            scheduled_faculty = cell['faculty'] if cell['faculty'] else '-'
+            
+            if checkin_doc.exists:
+                checkin_data = checkin_doc.to_dict()
+                actual_faculty = checkin_data.get('faculty_name', 'Unknown')
+                is_substitution = checkin_data.get('is_substitution', False)
+                substitution_reason = checkin_data.get('substitution_reason', '')
+                
+                if is_substitution:
+                    faculty_display = f"🔄 {actual_faculty} (Sub for {scheduled_faculty})"
+                    if substitution_reason:
+                        faculty_display += f" - {substitution_reason}"
+                else:
+                    faculty_display = f"✅ {actual_faculty}"
+                
+                is_free = False
+            else:
+                faculty_display = f"❌ {scheduled_faculty} (Not checked in)"
+                is_free = not cell['subject']
+            
+            today_schedule.append({
+                'period': scheduled_subject, 
+                'faculty': faculty_display, 
+                'start': start, 
+                'end': end, 
+                'free': is_free
+            })
+        
         if today_schedule:
             st.table(pd.DataFrame(today_schedule))
+            
+            # Show legend
+            st.info("""
+            **Legend:**
+            - ✅ = Faculty checked in (scheduled)
+            - 🔄 = Substitution (different faculty checked in)
+            - ❌ = Faculty not checked in
+            """)
         else:
             st.info('No schedule set for today!')
         # Gantt chart for today

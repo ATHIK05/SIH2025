@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import Image
 
 def show_faculty_student_records():
-    st.title('Student Records (Faculty View)')
+    st.subheader('👥 Student Records (Faculty View)')
     db = get_firestore_client()
     if 'user' not in st.session_state or st.session_state.get('role') != 'faculty':
         st.error('Please login as faculty.')
@@ -25,7 +25,7 @@ def show_faculty_student_records():
         sdata = doc.to_dict()
         students.append((doc.id, sdata))
     student_choices = {f"{s['name']} ({regno})": regno for regno, s in students}
-    student_display = st.selectbox('Student', list(student_choices.keys())) if students else None
+    student_display = st.selectbox('Student', list(student_choices.keys()), key='records_student_select') if students else None
     if student_display:
         regno = student_choices[student_display]
         sdata = next(s for r, s in students if r == regno)
