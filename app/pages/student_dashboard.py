@@ -1,4 +1,177 @@
 import streamlit as st
+
+# Enhanced page configuration
+st.set_page_config(
+    page_title='Student Dashboard - Smart Attendance Suite',
+    page_icon='🎓',
+    layout='wide'
+)
+
+# Custom CSS for premium student dashboard UI
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    .main {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .profile-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        border-left: 5px solid #667eea;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .info-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        border-top: 4px solid #667eea;
+        transition: transform 0.3s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        margin: 1rem 0;
+    }
+    
+    .metric-card h3 {
+        font-size: 2.5rem;
+        margin: 0;
+        font-weight: 700;
+    }
+    
+    .metric-card p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .timetable-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+    }
+    
+    .legend-container {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #17a2b8;
+        margin: 1rem 0;
+    }
+    
+    .suggestion-card {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+    }
+    
+    .progress-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+    
+    .action-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stProgress > div > div > div {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+    
+    /* Table Styling */
+    .stDataFrame {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display: none;}
+</style>
+""", unsafe_allow_html=True)
+
 from firebase.firebase_admin_init import get_firestore_client
 from datetime import datetime
 import pandas as pd
@@ -6,11 +179,29 @@ import base64
 from io import BytesIO
 
 def show_student_dashboard():
-    st.title('🎓 Student Dashboard')
+    # Enhanced dashboard header
+    st.markdown("""
+    <div class="dashboard-header">
+        <h1>🎓 Student Dashboard</h1>
+        <p style="font-size: 1.2rem; margin: 0; opacity: 0.9;">
+            Welcome to your personalized learning hub
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     db = get_firestore_client()
+    
     if 'user' not in st.session_state or st.session_state.get('role') != 'student':
-        st.error('Please login as a student.')
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); 
+                    color: white; padding: 2rem; border-radius: 15px; text-align: center; 
+                    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3); margin: 2rem 0;">
+            <h2>🚫 Access Denied</h2>
+            <p style="font-size: 1.1rem; margin: 0;">Please login as a student to access this dashboard.</p>
+        </div>
+        """, unsafe_allow_html=True)
         return
+    
     username = st.session_state['user']
     user_doc = db.collection('users').document(username).get()
     if not user_doc.exists:
@@ -23,28 +214,69 @@ def show_student_dashboard():
     if not student_doc.exists:
         st.error('Student record not found!')
         return
+    
     sdata = student_doc.to_dict()
-    img_data = sdata.get('images', [None])[0]
-    if img_data:
-        try:
-            # Remove any data URL prefix if present
-            if isinstance(img_data, str) and img_data.startswith("data:image"):
-                img_data = img_data.split(",", 1)[1]
-            if isinstance(img_data, str):
-                img_bytes = base64.b64decode(img_data)
-                st.image(BytesIO(img_bytes), caption='Student Image', width=150)
-            else:
-                st.image(img_data, caption='Student Image', width=150)
-        except Exception as e:
-            st.warning(f"Could not display image: {e}")
-    else:
-        st.info("No student image available.")
-    st.write(f"**Name:** {sdata.get('name', '')}")
-    st.write(f"**Register Number:** {regno}")
-    st.write(f"**Class:** {sdata.get('class', '')}")
+    
+    # Enhanced profile section
+    col1, col2 = st.columns([1, 3])
+    
+    with col1:
+        img_data = sdata.get('images', [None])[0]
+        if img_data:
+            try:
+                # Remove any data URL prefix if present
+                if isinstance(img_data, str) and img_data.startswith("data:image"):
+                    img_data = img_data.split(",", 1)[1]
+                if isinstance(img_data, str):
+                    img_bytes = base64.b64decode(img_data)
+                    st.image(
+                        BytesIO(img_bytes), 
+                        caption='Your Profile', 
+                        width=200,
+                        use_column_width=True
+                    )
+                else:
+                    st.image(img_data, caption='Your Profile', width=200)
+            except Exception as e:
+                st.markdown("""
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; text-align: center; border: 2px dashed #dee2e6;">
+                    <p style="color: #6c757d; margin: 0;">📷 Profile Image<br>Not Available</p>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; text-align: center; border: 2px dashed #dee2e6;">
+                <p style="color: #6c757d; margin: 0;">📷 Profile Image<br>Not Available</p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="profile-card">
+            <h2 style="color: #667eea; margin-bottom: 1rem;">👤 Profile Information</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">📝 Full Name</h4>
+                    <p style="font-size: 1.1rem; color: #666; margin: 0;">{sdata.get('name', 'Not Available')}</p>
+                </div>
+                <div>
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">🎓 Register Number</h4>
+                    <p style="font-size: 1.1rem; color: #666; margin: 0;">{regno}</p>
+                </div>
+                <div>
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">📚 Class</h4>
+                    <p style="font-size: 1.1rem; color: #666; margin: 0;">{sdata.get('class', 'Not Available')}</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Timetable for today
-    st.write('---')
-    st.subheader('Today\'s Timetable')
+    st.markdown("""
+    <div class="timetable-container">
+        <h2 style="color: #667eea; margin-bottom: 1.5rem;">📅 Today's Schedule</h2>
+    """, unsafe_allow_html=True)
+    
     class_name = sdata.get('class', '')
     date = datetime.today().date()
     DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -111,40 +343,125 @@ def show_student_dashboard():
         - ❌ = Faculty not checked in
         """)
     else:
-        st.info('No schedule set for today!')
+        st.markdown("""
+        <div style="background: #e3f2fd; color: #1976d2; padding: 2rem; border-radius: 12px; text-align: center; border-left: 4px solid #2196f3;">
+            <h4>📅 No Schedule Available</h4>
+            <p style="margin: 0;">No timetable has been set for today.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # Attendance
-    st.write('---')
-    st.subheader('Attendance Report')
+    st.markdown("""
+    <div style="text-align: center; margin: 2rem 0;">
+        <h2 style="color: #667eea;">📊 Academic Overview</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
     attendance_ref = db.collection('attendance').where('class', '==', class_name)
     attendance_records = [doc.to_dict() for doc in attendance_ref.stream()]
     present_days = sum([regno in rec.get('present', []) for rec in attendance_records])
     total_days = len(attendance_records)
-    st.metric('Attendance %', f"{(present_days/total_days*100) if total_days else 0:.1f}%")
-    st.write(f"Present: {present_days} / {total_days}")
+    
+    attendance_percentage = (present_days/total_days*100) if total_days else 0
+    
+    # Enhanced metrics display
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3>{attendance_percentage:.1f}%</h3>
+            <p>📈 Attendance Rate</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card" style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);">
+            <h3>{present_days}</h3>
+            <p>✅ Days Present</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="metric-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); box-shadow: 0 8px 25px rgba(255, 152, 0, 0.3);">
+            <h3>{total_days}</h3>
+            <p>📅 Total Days</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Marks & Feedback
-    st.write('---')
-    st.subheader('Marks, Grades & Faculty Feedback')
+    st.markdown("""
+    <div class="info-card">
+        <h3 style="color: #667eea; margin-bottom: 1rem;">📝 Academic Performance</h3>
+    """, unsafe_allow_html=True)
+    
     marks_ref = student_ref.collection('marks').stream()
     marks_data = [m.to_dict() for m in marks_ref]
     if marks_data:
-        st.table([{k: v for k, v in m.items() if k != 'timestamp'} for m in marks_data])
+        # Create a more visually appealing table
+        df = pd.DataFrame([{k: v for k, v in m.items() if k != 'timestamp'} for m in marks_data])
+        st.dataframe(df, use_container_width=True)
+        
+        st.markdown("<h4 style='color: #667eea; margin-top: 1.5rem;'>💬 Faculty Feedback</h4>", unsafe_allow_html=True)
         for m in marks_data:
-            st.write(f"**{m.get('exam', '')} - {m.get('subject', '')}:** {m.get('feedback', '')} (by {m.get('faculty', '')})")
+            if m.get('feedback'):
+                st.markdown(f"""
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea; margin: 0.5rem 0;">
+                    <strong>{m.get('exam', '')} - {m.get('subject', '')}</strong><br>
+                    <em>"{m.get('feedback', '')}"</em><br>
+                    <small style="color: #666;">- {m.get('faculty', '')}</small>
+                </div>
+                """, unsafe_allow_html=True)
     else:
-        st.info('No marks/grades found.')
+        st.markdown("""
+        <div style="background: #e3f2fd; color: #1976d2; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <p style="margin: 0;">📊 No academic records available yet.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # Daily Feedback
-    st.write('---')
-    st.subheader('Daily Feedback from Faculty')
+    st.markdown("""
+    <div class="info-card">
+        <h3 style="color: #667eea; margin-bottom: 1rem;">📅 Daily Feedback from Faculty</h3>
+    """, unsafe_allow_html=True)
+    
     fb_ref = student_ref.collection('daily_feedback').stream()
+    feedback_found = False
     for fb in fb_ref:
         fbd = fb.to_dict()
-        st.write(f"{fbd.get('date', '')}: {fbd.get('feedback', '')} (by {fbd.get('faculty', '')})")
+        feedback_found = True
+        st.markdown(f"""
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #4CAF50; margin: 0.5rem 0;">
+            <strong>📅 {fbd.get('date', '')}</strong><br>
+            <p style="margin: 0.5rem 0;">{fbd.get('feedback', '')}</p>
+            <small style="color: #666;">- {fbd.get('faculty', '')}</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    if not feedback_found:
+        st.markdown("""
+        <div style="background: #e3f2fd; color: #1976d2; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <p style="margin: 0;">💬 No daily feedback available yet.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # Personalized Suggestions
-    st.write('---')
-    st.subheader('🎯 Personalized Suggestions')
+    st.markdown("""
+    <div class="suggestion-card">
+        <h2 style="margin-bottom: 1rem;">🎯 Personalized Suggestions</h2>
+        <p style="opacity: 0.9; margin: 0;">AI-powered recommendations based on your performance</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Calculate attendance percentage
-    attendance_percentage = (present_days/total_days*100) if total_days else 0
     
     # Analyze academic performance
     academic_alerts = []
@@ -186,9 +503,14 @@ def show_student_dashboard():
     
     # 2. Academic performance-based suggestions
     if weak_subjects:
-        st.warning('📚 **Academic Focus Needed!**')
+        st.markdown("""
+        <div style="background: #fff3cd; color: #856404; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #ffc107; margin: 1rem 0;">
+            <h4>📚 Academic Focus Needed!</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
         for alert in academic_alerts:
-            st.write(alert)
+            st.markdown(f"⚠️ {alert}")
         
         for subject in weak_subjects:
             data = subject_performance[subject]
@@ -225,7 +547,7 @@ def show_student_dashboard():
     if not weak_subjects and attendance_percentage >= 75:
         interests = sdata.get('interests', [])
         if interests:
-            for interest in interests:
+            for interest in interests[:3]:  # Limit to top 3 interests
                 if 'coding' in interest.lower() or 'programming' in interest.lower():
                     suggestions.append("💻 **Coding**: Join coding competitions, contribute to open-source projects, or learn a new programming language.")
                 elif 'math' in interest.lower() or 'mathematics' in interest.lower():
@@ -251,34 +573,67 @@ def show_student_dashboard():
     suggestions.append("🧠 **Study Techniques**: Use active recall and spaced repetition for better retention.")
     
     # Display suggestions
+    st.markdown("""
+    <div class="info-card">
+        <h3 style="color: #667eea; margin-bottom: 1rem;">💡 Your Action Plan</h3>
+    """, unsafe_allow_html=True)
+    
     if suggestions:
         for i, suggestion in enumerate(suggestions[:8], 1):  # Limit to 8 suggestions
-            st.write(f'👉 {suggestion}')
+            st.markdown(f"""
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea; margin: 0.5rem 0;">
+                <strong>{i}.</strong> {suggestion}
+            </div>
+            """, unsafe_allow_html=True)
         
         if len(suggestions) > 8:
-            st.info(f"💡 *Showing top 8 suggestions. You have {len(suggestions)} total recommendations.*")
+            st.markdown(f"""
+            <div style="background: #e3f2fd; color: #1976d2; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0;">
+                <p style="margin: 0;">💡 <em>Showing top 8 suggestions. You have {len(suggestions)} total recommendations.</em></p>
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        st.info("🎯 Keep up the great work! Continue with your current study routine.")
+        st.markdown("""
+        <div style="background: #d4edda; color: #155724; padding: 1.5rem; border-radius: 8px; text-align: center;">
+            <p style="margin: 0;">🎯 Keep up the great work! Continue with your current study routine.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # Progress
-    st.write('---')
-    st.subheader('Progress Dashboard')
-    progress = sdata.get('progress', {})
-    for interest in interests:
-        pct = progress.get(interest, 0)
-        st.write(f"**{interest.title()}**")
-        st.progress(pct)
+    interests = sdata.get('interests', [])
+    if interests:
+        st.markdown("""
+        <div class="progress-container">
+            <h3 style="color: #667eea; margin-bottom: 1rem;">📈 Interest Progress Tracking</h3>
+        """, unsafe_allow_html=True)
+        
+        progress = sdata.get('progress', {})
+        for interest in interests:
+            pct = progress.get(interest, 0)
+            st.markdown(f"**{interest.title()}**")
+            st.progress(pct / 100.0 if pct > 1 else pct)
+            st.markdown(f"<small style='color: #666;'>{pct}% Complete</small>", unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     # Student-specific tools
-    st.write('---')
-    st.subheader('Student Tools')
+    st.markdown("""
+    <div style="text-align: center; margin: 2rem 0;">
+        <h2 style="color: #667eea;">🛠️ Student Tools</h2>
+        <p style="color: #666;">Access your personalized learning tools</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button('📅 Visual Daily Planner'):
+        if st.button('📅 Visual Daily Planner', use_container_width=True):
             st.switch_page('pages/visual_daily_planner.py')
     
     with col2:
-        if st.button('💡 Suggestion Engine'):
+        if st.button('💡 AI Suggestion Engine', use_container_width=True):
             st.switch_page('pages/suggestion_engine.py')
 
 if __name__ == '__main__':
