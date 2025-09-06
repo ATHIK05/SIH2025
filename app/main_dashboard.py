@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title='Smart Attendance & Productivity Suite', layout='wide', initial_sidebar_state='collapsed')
 from firebase.firebase_admin_init import get_firestore_client
 import os
 import subprocess
@@ -9,7 +10,15 @@ from app.pages.suggestion_engine import show_suggestion_engine
 from app.pages.visual_daily_planner import show_visual_daily_planner
 from app.pages.admin_dashboard import show_admin_dashboard
 
-st.set_page_config(page_title='Smart Attendance & Productivity Suite', layout='wide', initial_sidebar_state='collapsed')
+# Require login
+if 'user' not in st.session_state or 'role' not in st.session_state:
+    st.switch_page('pages/auth.py')
+
+st.sidebar.write(f"Logged in as: {st.session_state['user']} ({st.session_state['role']})")
+if st.sidebar.button('Logout'):
+    st.session_state.clear()
+    st.experimental_rerun()
+
 st.title('🎓 Smart Attendance & Productivity Suite')
 
 st.markdown('''
@@ -93,3 +102,34 @@ if class_name:
         show_admin_dashboard()
 else:
     st.info('Enter a class name to get started!')
+
+# Navigation sidebar
+st.sidebar.markdown('---')
+if st.session_state['role'] == 'faculty':
+    st.sidebar.write('**Faculty Tools**')
+    if st.sidebar.button('Period Check-in'):
+        st.switch_page('pages/faculty_checkin.py')
+    if st.sidebar.button('Enter Marks/Feedback'):
+        st.switch_page('pages/marks_feedback.py')
+    if st.sidebar.button('Daily Feedback Entry'):
+        st.switch_page('pages/daily_feedback.py')
+    if st.sidebar.button('Student Records'):
+        st.switch_page('pages/faculty_student_records.py')
+    if st.sidebar.button('Admin Dashboard'):
+        st.switch_page('pages/admin_dashboard.py')
+if st.session_state['role'] == 'student':
+    st.sidebar.write('**Student Tools**')
+    if st.sidebar.button('Student Dashboard'):
+        st.switch_page('pages/student_dashboard.py')
+    if st.sidebar.button('Attendance Report'):
+        st.switch_page('pages/student_dashboard.py')
+    if st.sidebar.button('Marks & Feedback'):
+        st.switch_page('pages/student_dashboard.py')
+    if st.sidebar.button('Progress Dashboard'):
+        st.switch_page('pages/student_dashboard.py')
+if st.sidebar.button('Suggestion Engine'):
+    st.switch_page('pages/suggestion_engine.py')
+if st.sidebar.button('Visual Daily Planner'):
+    st.switch_page('pages/visual_daily_planner.py')
+if st.sidebar.button('Live Attendance'):
+    st.switch_page('pages/live_attendance.py')
